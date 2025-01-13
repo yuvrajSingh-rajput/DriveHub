@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,6 +17,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createAccount } from "@/lib/actions/user.action";
+import OTPModel from "./OTPModel";
 
 
 type FormType = "sign-in" | "sign-up";
@@ -138,6 +138,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </div>
         </form>
       </Form>
+      {accountId && <OTPModel email={form.getValues("email")}  accountId={accountId}/>}
     </>
   );
 };
