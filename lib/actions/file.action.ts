@@ -43,16 +43,17 @@ export const uploadFile = async ({
     };
 
     // file metadata will be stored in the database while actual file will be store in storage
-    const newFile = await databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.filesCollectionId,
-      ID.unique(),
-      fileDocument
-    )
-    .catch(async (error: unknown) => {
+    const newFile = await databases
+      .createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.filesCollectionId,
+        ID.unique(),
+        fileDocument
+      )
+      .catch(async (error: unknown) => {
         await storage.deleteFile(appwriteConfig.bucketId, bucketFile.$id);
         handleError(error, "Failed to upload file");
-    });
+      });
 
     revalidatePath(path);
     return parseStringify(newFile);
@@ -66,17 +67,17 @@ const createQueries = (currentUser: Models.Document) => {
     Query.or([
       Query.equal("owner", [currentUser.$id]),
       Query.contains("users", [currentUser.email]),
-    ])
+    ]),
   ];
 
   return queries;
-}
+};
 
 export const getFiles = async () => {
-  const {databases} = await createAdminClient();
+  const { databases } = await createAdminClient();
   try {
     const currentUser = await getCurrentUser();
-    if(!currentUser){
+    if (!currentUser) {
       throw new Error("User not found");
     }
 
@@ -89,8 +90,32 @@ export const getFiles = async () => {
     );
 
     return parseStringify(files);
-
   } catch (error) {
     handleError(error, "Failed to get files");
   }
-}
+};
+
+export const renameFile = async ({
+  fileId,
+  name,
+  extension,
+  path,
+}: RenameFileProps) => {
+  const { databases } = await createAdminClient();
+  try {
+    const newName = `${name}.${extension}`;
+    const updatedFile = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      fileId,
+      {
+        name: newName,
+      }
+    );
+
+    revalidatePath(path);
+    return parseStringify(updatedFile);
+  } catch (error) {
+    handleError(error, "Failed to rename file");
+  }
+};
